@@ -1,0 +1,15 @@
+{
+  "name": "Catatan Keuangan & Tagihan",
+  "short_name": "CatatanKu",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#F3F4F6",
+  "theme_color": "#4F46E5",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2921/2921222.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
