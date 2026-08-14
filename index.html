@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pencatatan Status & Pelapor</title>
+    <title>Pencatatan Kendala & Koneksi</title>
     <!-- Manifest PWA -->
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#4F46E5" />
@@ -28,7 +28,7 @@
         padding: 16px;
       }
       .container {
-        max-width: 500px;
+        max-width: 700px;
         margin: 0 auto;
       }
       h2 {
@@ -75,40 +75,39 @@
         background-color: #059669;
         margin-bottom: 16px;
       }
-      .item-list {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-      .item-card {
+      .table-container {
+        overflow-x: auto;
         background: var(--card);
-        padding: 14px;
         border-radius: 8px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-left: 6px solid var(--primary);
+        padding: 8px;
       }
-      .item-card.terkoneksi {
-        border-left-color: var(--success);
-        opacity: 0.85;
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 14px;
       }
-      .item-card.progres {
-        border-left-color: var(--warning);
+      th,
+      td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #e5e7eb;
       }
-      .item-card.tidak {
-        border-left-color: var(--danger);
+      th {
+        background-color: #f9fafb;
+        color: #374151;
+        font-weight: bold;
       }
-      .item-info div {
-        margin-bottom: 4px;
+      tr:hover {
+        background-color: #f9fafb;
       }
       .badge {
-        font-size: 12px;
+        font-size: 11px;
         padding: 4px 8px;
         border-radius: 4px;
         color: white;
         display: inline-block;
+        white-space: nowrap;
       }
       .badge.tidak {
         background-color: var(--danger);
@@ -123,10 +122,10 @@
         background: none;
         color: var(--danger);
         border: none;
-        width: auto;
-        padding: 8px;
-        font-size: 18px;
+        padding: 4px 8px;
+        font-size: 16px;
         cursor: pointer;
+        width: auto;
       }
       .total-box {
         background: #e0e7ff;
@@ -140,80 +139,110 @@
     </style>
   </head>
   <body>
-    <div class="container" id="areaCetakPDF">
-      <h2>Pencatatan Koneksi</h2>
-      <div class="subtitle">Monitor Status & Pelapor 😎</div>
+    <div class="container">
+      <!-- Bagian yang akan ikut tercetak ke PDF -->
+      <div id="areaCetakPDF">
+        <h2>Laporan Kendala & Koneksi</h2>
+        <div class="subtitle">Rekapitulasi Status Pelapor</div>
 
-      <div class="total-box">
-        Belum Terkoneksi: <span id="totalBelum">0</span> Item
+        <div class="total-box">
+          Belum Terkoneksi: <span id="totalBelum">0</span> Item
+        </div>
+
+        <!-- Tabel Data -->
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Nama Pelapor</th>
+                <th>Keterangan / Kendala</th>
+                <th>Status</th>
+                <th style="text-align: center; width: 50px" class="hide-pdf">
+                  Aksi
+                </th>
+              </tr>
+            </thead>
+            <tbody id="listCatatan">
+              <!-- Data masuk lewat JS -->
+            </tbody>
+          </table>
+        </div>
       </div>
+      <!-- Akhir Area PDF -->
 
-      <!-- Tombol Download PDF -->
-      <button type="button" class="btn-pdf" onclick="downloadPDF()">📥 Download PDF Laporan</button>
+      <div style="margin-top: 16px">
+        <!-- Tombol Download PDF -->
+        <button type="button" class="btn-pdf" onclick="downloadPDF()">
+          📥 Cetak Laporan Kendala (PDF)
+        </button>
 
-      <!-- Form Input -->
-      <div class="card">
-        <h3>+ Tambah Catatan</h3>
-        <form id="formCatatan">
-          <input type="date" id="tanggal" required />
-          <input
-            type="text"
-            id="namaPelapor"
-            placeholder="Nama Pelapor (Contoh: Budi Santoso)"
-            required
-          />
-          <input
-            type="text"
-            id="keterangan"
-            placeholder="Keterangan (Contoh: Jaringan Kantor Cabang)"
-            required
-          />
-          
-          <select id="status">
-            <option value="Status Tidak Terkoneksi">🔴 Status Tidak Terkoneksi</option>
-            <option value="Progres">🟡 Progres</option>
-            <option value="Sudah Terkoneksi">🟢 Sudah Terkoneksi</option>
-          </select>
-          <button type="submit">Simpan Catatan</button>
-        </form>
-      </div>
-
-      <!-- Daftar Catatan -->
-      <h3>Daftar Transaksi</h3>
-      <div id="listCatatan" class="item-list">
-        <!-- Data akan masuk otomatis lewat JavaScript -->
+        <!-- Form Input -->
+        <div class="card">
+          <h3>+ Tambah Kendala Baru</h3>
+          <form id="formCatatan" onsubmit="simpanDataForm(event)">
+            <input type="date" id="tanggal" required />
+            <input
+              type="text"
+              id="namaPelapor"
+              placeholder="Nama Pelapor (Contoh: Budi Santoso)"
+              required
+            />
+            <input
+              type="text"
+              id="keterangan"
+              placeholder="Keterangan / Kendala (Contoh: Jaringan Putus)"
+              required
+            />
+            <select id="status">
+              <option value="Status Tidak Terkoneksi">
+                🔴 Status Tidak Terkoneksi
+              </option>
+              <option value="Progres">🟡 Progres</option>
+              <option value="Sudah Terkoneksi">🟢 Sudah Terkoneksi</option>
+            </select>
+            <button type="submit" id="btnSimpan">Simpan Catatan</button>
+          </form>
+        </div>
       </div>
     </div>
 
     <script>
-      // Ambil data dari memori HP (LocalStorage)
       let dataCatatan =
-        JSON.parse(localStorage.getItem("catatan_koneksi")) || [];
+        JSON.parse(localStorage.getItem("catatan_kendala_tabel")) || [];
 
-      const form = document.getElementById("formCatatan");
       const listContainer = document.getElementById("listCatatan");
       const totalBelumEl = document.getElementById("totalBelum");
 
-      // Set tanggal default hari ini
       document.getElementById("tanggal").valueAsDate = new Date();
 
-      form.addEventListener("submit", function (e) {
+      function simpanDataForm(e) {
         e.preventDefault();
+
+        const tgl = document.getElementById("tanggal").value;
+        const pelapor = document.getElementById("namaPelapor").value;
+        const ket = document.getElementById("keterangan").value;
+        const stat = document.getElementById("status").value;
+
+        if (!tgl || !pelapor || !ket) {
+          alert("Mohon lengkapi semua kolom terlebih dahulu!");
+          return;
+        }
 
         const item = {
           id: Date.now(),
-          tanggal: document.getElementById("tanggal").value,
-          namaPelapor: document.getElementById("namaPelapor").value,
-          keterangan: document.getElementById("keterangan").value,
-          jumlah: Number(document.getElementById("jumlah").value),
-          status: document.getElementById("status").value,
+          tanggal: tgl,
+          namaPelapor: pelapor,
+          keterangan: ket,
+          status: stat,
         };
 
-        dataCatatan.unshift(item); // Masukkan ke urutan paling atas
+        dataCatatan.unshift(item);
         simpanDanTampilkan();
-        form.reset();
+
+        document.getElementById("formCatatan").reset();
         document.getElementById("tanggal").valueAsDate = new Date();
-      });
+      }
 
       function hapusData(id) {
         dataCatatan = dataCatatan.filter((item) => item.id !== id);
@@ -236,23 +265,22 @@
         simpanDanTampilkan();
       }
 
-      function formatRupiah(angka) {
-        return new Intl.NumberFormat("id-ID", {
-          style: "currency",
-          currency: "IDR",
-          maximumFractionDigits: 0,
-        }).format(angka);
-      }
-
       function simpanDanTampilkan() {
-        localStorage.setItem("catatan_koneksi", JSON.stringify(dataCatatan));
+        localStorage.setItem(
+          "catatan_kendala_tabel",
+          JSON.stringify(dataCatatan),
+        );
 
         listContainer.innerHTML = "";
         let totalBelumTerkoneksi = 0;
 
         if (dataCatatan.length === 0) {
-          listContainer.innerHTML =
-            '<div class="card" style="text-align: center; color: #6B7280;">Belum ada catatan. Yuk tambah baru!</div>';
+          listContainer.innerHTML = `
+            <tr>
+              <td colspan="5" style="text-align: center; color: #6B7280; padding: 20px;">
+                Belum ada catatan kendala. Yuk tambah baru!
+              </td>
+            </tr>`;
         }
 
         dataCatatan.forEach((item) => {
@@ -261,27 +289,27 @@
           }
 
           let badgeClass = "tidak";
-          let cardClass = "tidak";
           if (item.status === "Progres") {
             badgeClass = "progres";
-            cardClass = "progres";
           } else if (item.status === "Sudah Terkoneksi") {
             badgeClass = "terkoneksi";
-            cardClass = "terkoneksi";
           }
 
-          const div = document.createElement("div");
-          div.className = `item-card ${cardClass}`;
-          div.innerHTML = `
-                <div class="item-info" style="flex-grow: 1; cursor: pointer;" onclick="toggleStatus(${item.id})" title="Klik untuk ubah status">
-                    <div style="font-size: 12px; color: #6B7280;">📅 ${item.tanggal} | Pelapor: <b>${item.namaPelapor}</b></div>
-                    <div style="font-weight: bold; font-size: 16px;">${item.keterangan}</div>
-                    <div style="color: #4B5563; font-weight: 600;">${formatRupiah(item.jumlah)}</div>
-                    <div><span class="badge ${badgeClass}">${item.status}</span></div>
-                </div>
-                <button class="btn-del" onclick="hapusData(${item.id})">🗑️</button>
-            `;
-          listContainer.appendChild(div);
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td style="white-space: nowrap; font-size: 13px; color: #4b5563;">📅 ${item.tanggal}</td>
+            <td style="font-weight: 600;">${item.namaPelapor}</td>
+            <td>${item.keterangan}</td>
+            <td>
+              <span class="badge ${badgeClass}" style="cursor: pointer;" onclick="toggleStatus(${item.id})" title="Klik untuk ubah status">
+                ${item.status}
+              </span>
+            </td>
+            <td style="text-align: center;" class="hide-pdf">
+              <button class="btn-del" onclick="hapusData(${item.id})" title="Hapus">🗑️</button>
+            </td>
+          `;
+          listContainer.appendChild(tr);
         });
 
         totalBelumEl.innerText = totalBelumTerkoneksi;
@@ -291,7 +319,7 @@
         const element = document.getElementById("areaCetakPDF");
         const options = {
           margin: 10,
-          filename: "Laporan-Koneksi-Pelapor.pdf",
+          filename: "Laporan-Kendala-Koneksi.pdf",
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: { scale: 2 },
           jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
@@ -299,7 +327,6 @@
         html2pdf().from(element).set(options).save();
       }
 
-      // Jalankan saat pertama buka
       simpanDanTampilkan();
     </script>
   </body>
